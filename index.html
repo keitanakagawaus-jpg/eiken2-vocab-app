@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>英検2級 単語マスター Pro</title>
+    <title>英検2級 単語マスター Pro - 1500語完全版</title>
     <style>
         :root {
             --primary: #4A90E2;
@@ -23,6 +23,38 @@
             background: var(--bg);
             min-height: 100vh;
             color: white;
+            overflow-x: hidden;
+        }
+
+        /* ===== ローディング画面 ===== */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* ===== ナビゲーション ===== */
@@ -41,26 +73,36 @@
             background: none;
             border: none;
             color: rgba(255,255,255,0.7);
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            padding: 5px 15px;
+            padding: 8px 12px;
             border-radius: 10px;
             transition: all 0.3s;
+            min-width: 60px;
         }
 
-        .nav-btn .icon { font-size: 22px; }
+        .nav-btn .icon { font-size: 20px; }
         .nav-btn.active { 
             color: white; 
             background: rgba(255,255,255,0.2);
         }
 
-        /* ===== 画面切り替え ===== */
-        .screen { display: none; padding: 20px; }
+        /* ===== 画面管理 ===== */
+        .screen { 
+            display: none; 
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
         .screen.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         /* ===== ホーム画面 ===== */
         .home-header {
@@ -69,15 +111,24 @@
         }
 
         .home-header h1 { 
-            font-size: 26px; 
-            margin-bottom: 5px;
+            font-size: 24px; 
+            margin-bottom: 8px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .word-count-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+            margin-top: 10px;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 12px;
             margin: 20px 0;
         }
 
@@ -90,20 +141,21 @@
         }
 
         .stat-card .num { 
-            font-size: 32px; 
+            font-size: 28px; 
             font-weight: bold; 
+            line-height: 1;
         }
 
         .stat-card .label { 
             font-size: 12px; 
             opacity: 0.8; 
-            margin-top: 5px;
+            margin-top: 8px;
         }
 
         .mode-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 12px;
             margin: 20px 0;
         }
 
@@ -111,7 +163,7 @@
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(5px);
             border-radius: 15px;
-            padding: 25px 15px;
+            padding: 20px 15px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
@@ -124,38 +176,69 @@
             transform: translateY(-3px);
         }
 
-        .mode-card .mode-icon { font-size: 36px; margin-bottom: 10px; }
-        .mode-card .mode-name { font-size: 16px; font-weight: bold; }
-        .mode-card .mode-desc { font-size: 12px; opacity: 0.8; margin-top: 5px; }
+        .mode-card .mode-icon { font-size: 32px; margin-bottom: 8px; }
+        .mode-card .mode-name { font-size: 14px; font-weight: bold; }
+        .mode-card .mode-desc { font-size: 11px; opacity: 0.8; margin-top: 4px; }
 
-        /* ===== カテゴリ選択 ===== */
-        .category-section { margin: 20px 0; }
-        .category-section h2 { font-size: 18px; margin-bottom: 15px; }
+        /* ===== 設定画面共通 ===== */
+        .setup-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
 
-        .category-grid {
+        .setup-section {
+            margin-bottom: 25px;
+        }
+
+        .setup-section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .option-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
         }
 
-        .category-btn {
+        .option-btn {
             background: rgba(255,255,255,0.15);
-            border: 2px solid transparent;
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 12px;
-            padding: 12px;
+            padding: 12px 8px;
             color: white;
             cursor: pointer;
             text-align: center;
             transition: all 0.3s;
-            font-size: 14px;
+            font-size: 13px;
         }
 
-        .category-btn.selected {
+        .option-btn.selected {
             background: rgba(255,255,255,0.3);
             border-color: white;
         }
 
-        /* ===== フラッシュカード ===== */
+        .start-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--success);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            background: #27AE60;
+            transform: translateY(-2px);
+        }
+
+        /* ===== 学習画面共通 ===== */
         .study-header {
             display: flex;
             justify-content: space-between;
@@ -190,17 +273,18 @@
             transition: width 0.5s ease;
         }
 
+        /* ===== フラッシュカード ===== */
         .flashcard-wrapper {
             display: flex;
             justify-content: center;
-            margin: 10px 0 20px;
+            margin: 20px 0;
             perspective: 1000px;
         }
 
         .flashcard {
             width: 100%;
-            max-width: 400px;
-            height: 280px;
+            max-width: 380px;
+            height: 260px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s ease;
@@ -231,27 +315,28 @@
         }
 
         .word-en {
-            font-size: 34px;
+            font-size: 32px;
             font-weight: bold;
             color: var(--primary);
             margin-bottom: 10px;
             text-align: center;
+            line-height: 1.2;
         }
 
         .word-phonetic {
-            font-size: 16px;
+            font-size: 14px;
             color: #888;
             font-style: italic;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .audio-btn {
             background: rgba(74,144,226,0.1);
             border: 2px solid var(--primary);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
             cursor: pointer;
             margin: 10px 0;
             transition: all 0.3s;
@@ -265,32 +350,34 @@
         }
 
         .tap-hint {
-            font-size: 13px;
+            font-size: 12px;
             color: #aaa;
-            margin-top: 10px;
+            margin-top: 15px;
+            text-align: center;
         }
 
         .word-ja {
-            font-size: 30px;
+            font-size: 28px;
             font-weight: bold;
             color: var(--secondary);
             margin-bottom: 15px;
             text-align: center;
+            line-height: 1.3;
         }
 
         .word-example {
-            font-size: 13px;
+            font-size: 12px;
             color: #666;
             text-align: center;
-            line-height: 1.6;
+            line-height: 1.5;
             font-style: italic;
         }
 
         .answer-btns {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
-            margin-top: 10px;
+            margin-top: 15px;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
@@ -302,42 +389,42 @@
         }
 
         .ans-btn {
-            padding: 15px 25px;
+            padding: 14px 20px;
             border: none;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: white;
             cursor: pointer;
             box-shadow: var(--shadow);
             transition: all 0.3s;
-            min-width: 140px;
+            min-width: 120px;
         }
 
         .ans-btn:hover { transform: translateY(-2px); }
         .btn-known { background: var(--success); }
         .btn-unknown { background: var(--danger); }
 
-        /* ===== 4択クイズ ===== */
+        /* ===== クイズ ===== */
         .quiz-question {
             background: rgba(255,255,255,0.15);
             border-radius: 20px;
-            padding: 30px 20px;
+            padding: 25px 20px;
             text-align: center;
             margin-bottom: 20px;
         }
 
         .quiz-word {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: bold;
             margin-bottom: 10px;
         }
 
         .quiz-phonetic {
-            font-size: 16px;
+            font-size: 14px;
             opacity: 0.8;
             font-style: italic;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .quiz-audio {
@@ -353,16 +440,16 @@
         .quiz-options {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         .quiz-option {
             background: rgba(255,255,255,0.15);
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 15px;
-            padding: 18px;
+            padding: 16px;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.3s;
             text-align: center;
@@ -372,7 +459,6 @@
         .quiz-option.correct { 
             background: var(--success); 
             border-color: var(--success);
-            transform: scale(1.02);
         }
         .quiz-option.wrong { 
             background: var(--danger); 
@@ -381,7 +467,7 @@
 
         .quiz-result {
             text-align: center;
-            font-size: 20px;
+            font-size: 16px;
             margin: 15px 0;
             padding: 10px;
             border-radius: 10px;
@@ -393,7 +479,7 @@
         .quiz-result.correct-msg { background: rgba(46,204,113,0.3); }
         .quiz-result.wrong-msg { background: rgba(231,76,60,0.3); }
 
-        .next-quiz-btn {
+        .next-btn {
             display: none;
             margin: 15px auto 0;
             padding: 12px 30px;
@@ -401,89 +487,36 @@
             color: var(--primary);
             border: none;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: var(--shadow);
         }
 
-        /* ===== 統計画面 ===== */
-        .stats-screen { padding: 20px; }
-        .stats-screen h2 { font-size: 22px; margin-bottom: 20px; text-align: center; }
-
-        .big-stat {
-            background: rgba(255,255,255,0.15);
-            border-radius: 20px;
-            padding: 25px;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .big-stat .big-num {
-            font-size: 60px;
-            font-weight: bold;
-            line-height: 1;
-        }
-
-        .big-stat .big-label { 
-            font-size: 16px; 
-            opacity: 0.8; 
-            margin-top: 10px;
-        }
-
-        .detail-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .detail-stat {
-            background: rgba(255,255,255,0.15);
-            border-radius: 15px;
-            padding: 15px 10px;
-            text-align: center;
-        }
-
-        .detail-stat .d-num { font-size: 24px; font-weight: bold; }
-        .detail-stat .d-label { font-size: 11px; opacity: 0.8; margin-top: 5px; }
-
-        .reset-btn {
-            width: 100%;
-            padding: 15px;
-            background: rgba(231,76,60,0.3);
-            border: 2px solid var(--danger);
-            border-radius: 15px;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        /* ===== 完了画面 ===== */
+        /* ===== 統計・完了画面 ===== */
         .completion {
             text-align: center;
             padding: 30px 20px;
         }
 
-        .completion-emoji { font-size: 80px; margin-bottom: 20px; }
-        .completion h2 { font-size: 28px; margin-bottom: 15px; }
-        .completion-score { font-size: 60px; font-weight: bold; margin: 20px 0; }
-        .completion-msg { font-size: 18px; opacity: 0.9; margin-bottom: 30px; }
+        .completion-emoji { font-size: 60px; margin-bottom: 15px; }
+        .completion h2 { font-size: 24px; margin-bottom: 10px; }
+        .completion-score { font-size: 48px; font-weight: bold; margin: 15px 0; }
+        .completion-msg { font-size: 16px; opacity: 0.9; margin-bottom: 25px; }
 
         .completion-btns {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            max-width: 300px;
+            gap: 10px;
+            max-width: 280px;
             margin: 0 auto;
         }
 
         .comp-btn {
-            padding: 15px;
+            padding: 12px;
             border: none;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -496,26 +529,25 @@
             border: 2px solid rgba(255,255,255,0.5);
         }
 
-        /* ===== ストリーク ===== */
-        .streak-banner {
-            background: linear-gradient(135deg, #F39C12, #E67E22);
-            border-radius: 15px;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
+        /* ===== レスポンシブ対応 ===== */
+        @media (max-width: 480px) {
+            .flashcard { max-width: 320px; height: 240px; }
+            .word-en { font-size: 28px; }
+            .word-ja { font-size: 24px; }
         }
-
-        .streak-fire { font-size: 36px; }
-        .streak-info .streak-num { font-size: 24px; font-weight: bold; }
-        .streak-info .streak-label { font-size: 13px; opacity: 0.9; }
     </style>
 </head>
 <body>
 
+<!-- ローディング画面 -->
+<div class="loading-screen" id="loading-screen">
+    <div class="loading-spinner"></div>
+    <h2>英検2級単語データを読み込み中...</h2>
+    <p id="loading-status">データベースを準備しています</p>
+</div>
+
 <!-- ナビゲーション -->
-<nav class="nav">
+<nav class="nav" id="main-nav" style="display: none;">
     <button class="nav-btn active" onclick="showScreen('home')" id="nav-home">
         <span class="icon">🏠</span>ホーム
     </button>
@@ -531,13 +563,11 @@
 </nav>
 
 <!-- ホーム画面 -->
-<div class="screen active" id="screen-home">
+<div class="screen" id="screen-home">
     <div class="home-header">
-        <h1>🎯 英検2級 単語マスター</h1>
-        <p>1500単語を完全マスターしよう</p>
+        <h1>🎯 英検2級 単語マスター Pro</h1>
+        <div class="word-count-badge" id="word-count-display">データ読み込み中...</div>
     </div>
-
-    <div id="streak-area"></div>
 
     <div class="stats-grid">
         <div class="stat-card">
@@ -553,8 +583,8 @@
             <div class="label">覚えた単語</div>
         </div>
         <div class="stat-card">
-            <div class="num" id="home-sessions">0</div>
-            <div class="label">学習セッション数</div>
+            <div class="num" id="home-weak">0</div>
+            <div class="label">苦手単語</div>
         </div>
     </div>
 
@@ -567,7 +597,7 @@
         <div class="mode-card" onclick="showScreen('quiz-setup')">
             <div class="mode-icon">🧠</div>
             <div class="mode-name">4択クイズ</div>
-            <div class="mode-desc">理解度をテスト</div>
+            <div class="mode-desc">語彙問題対策</div>
         </div>
         <div class="mode-card" onclick="startWeakWords()">
             <div class="mode-icon">⚡</div>
@@ -577,44 +607,38 @@
         <div class="mode-card" onclick="startRandom()">
             <div class="mode-icon">🎲</div>
             <div class="mode-name">ランダム</div>
-            <div class="mode-desc">ランダムで学習</div>
+            <div class="mode-desc">全範囲から出題</div>
         </div>
     </div>
 </div>
 
 <!-- フラッシュカード設定 -->
 <div class="screen" id="screen-flashcard-setup">
-    <div class="home-header">
+    <div class="setup-header">
         <h1>📚 単語カード設定</h1>
     </div>
 
-    <div class="category-section">
-        <h2>カテゴリを選択</h2>
-        <div class="category-grid" id="category-grid-flash">
-            <button class="category-btn selected" onclick="selectCategory(this, 'flash', 'all')">🌟 全カテゴリ</button>
-            <button class="category-btn" onclick="selectCategory(this, 'flash', 'noun')">📦 名詞</button>
-            <button class="category-btn" onclick="selectCategory(this, 'flash', 'verb')">⚡ 動詞</button>
-            <button class="category-btn" onclick="selectCategory(this, 'flash', 'adjective')">🎨 形容詞</button>
-            <button class="category-btn" onclick="selectCategory(this, 'flash', 'adverb')">💨 副詞</button>
-            <button class="category-btn" onclick="selectCategory(this, 'flash', 'weak')">❌ 苦手単語</button>
+    <div class="setup-section">
+        <h3>問題数を選択</h3>
+        <div class="option-grid">
+            <button class="option-btn selected" id="count-10" onclick="selectCount(10)">10問</button>
+            <button class="option-btn" id="count-20" onclick="selectCount(20)">20問</button>
+            <button class="option-btn" id="count-50" onclick="selectCount(50)">50問</button>
+            <button class="option-btn" id="count-100" onclick="selectCount(100)">100問</button>
         </div>
     </div>
 
-    <div class="category-section">
-        <h2>問題数を選択</h2>
-        <div class="category-grid">
-            <button class="category-btn selected" id="count-btn-10" onclick="selectCount(10)">10問</button>
-            <button class="category-btn" id="count-btn-20" onclick="selectCount(20)">20問</button>
-            <button class="category-btn" id="count-btn-50" onclick="selectCount(50)">50問</button>
-            <button class="category-btn" id="count-btn-all" onclick="selectCount(0)">全問</button>
+    <div class="setup-section">
+        <h3>学習範囲</h3>
+        <div class="option-grid">
+            <button class="option-btn selected" id="range-all" onclick="selectRange('all')">全範囲</button>
+            <button class="option-btn" id="range-noun" onclick="selectRange('noun')">名詞</button>
+            <button class="option-btn" id="range-verb" onclick="selectRange('verb')">動詞</button>
+            <button class="option-btn" id="range-adj" onclick="selectRange('adj')">形容詞</button>
         </div>
     </div>
 
-    <div style="margin-top: 30px;">
-        <button class="ans-btn btn-known" style="width:100%; padding: 18px;" onclick="startFlashcard()">
-            🚀 学習スタート
-        </button>
-    </div>
+    <button class="start-btn" onclick="startFlashcard()">🚀 学習スタート</button>
 </div>
 
 <!-- フラッシュカード学習 -->
@@ -633,14 +657,14 @@
     <div class="flashcard-wrapper">
         <div class="flashcard" id="flashcard" onclick="flipFlashcard()">
             <div class="card-face card-front">
-                <div class="word-en" id="fc-word">word</div>
-                <div class="word-phonetic" id="fc-phonetic">/wɜːrd/</div>
-                <button class="audio-btn" onclick="event.stopPropagation(); playAudio()" id="audio-btn">🔊</button>
+                <div class="word-en" id="fc-word">Loading...</div>
+                <div class="word-phonetic" id="fc-phonetic">/ˈloʊdɪŋ/</div>
+                <button class="audio-btn" onclick="event.stopPropagation(); playAudio()">🔊</button>
                 <div class="tap-hint">タップして意味を見る 👆</div>
             </div>
             <div class="card-face card-back">
-                <div class="word-ja" id="fc-ja">意味</div>
-                <div class="word-example" id="fc-example">例文</div>
+                <div class="word-ja" id="fc-ja">読み込み中</div>
+                <div class="word-example" id="fc-example">Please wait while loading...</div>
             </div>
         </div>
     </div>
@@ -653,38 +677,24 @@
 
 <!-- クイズ設定 -->
 <div class="screen" id="screen-quiz-setup">
-    <div class="home-header">
-        <h1>🧠 クイズ設定</h1>
+    <div class="setup-header">
+        <h1>🧠 4択クイズ設定</h1>
     </div>
 
-    <div class="category-section">
-        <h2>カテゴリを選択</h2>
-        <div class="category-grid" id="category-grid-quiz">
-            <button class="category-btn selected" onclick="selectCategory(this, 'quiz', 'all')">🌟 全カテゴリ</button>
-            <button class="category-btn" onclick="selectCategory(this, 'quiz', 'noun')">📦 名詞</button>
-            <button class="category-btn" onclick="selectCategory(this, 'quiz', 'verb')">⚡ 動詞</button>
-            <button class="category-btn" onclick="selectCategory(this, 'quiz', 'adjective')">🎨 形容詞</button>
-            <button class="category-btn" onclick="selectCategory(this, 'quiz', 'adverb')">💨 副詞</button>
+    <div class="setup-section">
+        <h3>問題数を選択</h3>
+        <div class="option-grid">
+            <button class="option-btn selected" id="qcount-10" onclick="selectQuizCount(10)">10問</button>
+            <button class="option-btn" id="qcount-20" onclick="selectQuizCount(20)">20問</button>
+            <button class="option-btn" id="qcount-30" onclick="selectQuizCount(30)">30問</button>
+            <button class="option-btn" id="qcount-50" onclick="selectQuizCount(50)">50問</button>
         </div>
     </div>
 
-    <div class="category-section">
-        <h2>問題数を選択</h2>
-        <div class="category-grid">
-            <button class="category-btn selected" id="qcount-btn-10" onclick="selectQuizCount(10)">10問</button>
-            <button class="category-btn" id="qcount-btn-20" onclick="selectQuizCount(20)">20問</button>
-            <button class="category-btn" id="qcount-btn-30" onclick="selectQuizCount(30)">30問</button>
-        </div>
-    </div>
-
-    <div style="margin-top: 30px;">
-        <button class="ans-btn btn-known" style="width:100%; padding: 18px;" onclick="startQuiz()">
-            🚀 クイズスタート
-        </button>
-    </div>
+    <button class="start-btn" onclick="startQuiz()">🚀 クイズスタート</button>
 </div>
 
-<!-- クイズ画面 -->
+<!-- クイズ学習 -->
 <div class="screen" id="screen-quiz">
     <div class="study-header">
         <button class="back-btn" onclick="showScreen('quiz-setup')">← 戻る</button>
@@ -699,60 +709,44 @@
     </div>
 
     <div class="quiz-question">
-        <div class="quiz-word" id="qz-word">word</div>
-        <div class="quiz-phonetic" id="qz-phonetic">/wɜːrd/</div>
-        <button class="quiz-audio" onclick="playQuizAudio()" id="quiz-audio-btn">🔊 発音を聞く</button>
+        <div class="quiz-word" id="qz-word">Loading...</div>
+        <div class="quiz-phonetic" id="qz-phonetic">/ˈloʊdɪŋ/</div>
+        <button class="quiz-audio" onclick="playQuizAudio()">🔊 発音を聞く</button>
     </div>
 
     <div class="quiz-result" id="qz-result"></div>
-
     <div class="quiz-options" id="qz-options"></div>
-
-    <button class="next-quiz-btn" id="next-quiz-btn" onclick="nextQuiz()">次の問題 →</button>
+    <button class="next-btn" id="next-quiz-btn" onclick="nextQuiz()">次の問題 →</button>
 </div>
 
 <!-- 統計画面 -->
 <div class="screen" id="screen-stats">
-    <div class="stats-screen">
-        <h2>📊 学習統計</h2>
-
-        <div class="big-stat">
-            <div class="big-num" id="stats-accuracy">0%</div>
-            <div class="big-label">総合正解率</div>
-        </div>
-
-        <div class="detail-stats">
-            <div class="detail-stat">
-                <div class="d-num" id="stats-total">0</div>
-                <div class="d-label">総学習数</div>
-            </div>
-            <div class="detail-stat">
-                <div class="d-num" id="stats-known">0</div>
-                <div class="d-label">覚えた数</div>
-            </div>
-            <div class="detail-stat">
-                <div class="d-num" id="stats-weak">0</div>
-                <div class="d-label">苦手単語数</div>
-            </div>
-        </div>
-
-        <div class="detail-stats">
-            <div class="detail-stat">
-                <div class="d-num" id="stats-sessions">0</div>
-                <div class="d-label">セッション数</div>
-            </div>
-            <div class="detail-stat">
-                <div class="d-num" id="stats-streak">0</div>
-                <div class="d-label">連続学習日数</div>
-            </div>
-            <div class="detail-stat">
-                <div class="d-num" id="stats-quiz-acc">0%</div>
-                <div class="d-label">クイズ正解率</div>
-            </div>
-        </div>
-
-        <button class="reset-btn" onclick="resetStats()">🗑️ 学習データをリセット</button>
+    <div class="setup-header">
+        <h1>📊 学習統計</h1>
     </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="num" id="stats-total">0</div>
+            <div class="label">総学習数</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="stats-accuracy">0%</div>
+            <div class="label">正解率</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="stats-known">0</div>
+            <div class="label">覚えた数</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="stats-weak">0</div>
+            <div class="label">苦手単語数</div>
+        </div>
+    </div>
+
+    <button class="start-btn" onclick="resetStats()" style="background: var(--danger);">
+        🗑️ 学習データをリセット
+    </button>
 </div>
 
 <!-- 完了画面 -->
@@ -761,7 +755,7 @@
         <div class="completion-emoji" id="comp-emoji">🎉</div>
         <h2 id="comp-title">学習完了！</h2>
         <div class="completion-score" id="comp-score">80%</div>
-        <div class="completion-msg" id="comp-msg">素晴らしい！</div>
+        <div class="completion-msg" id="comp-msg">素晴らしい結果です！</div>
         <div class="completion-btns">
             <button class="comp-btn comp-btn-primary" onclick="showScreen('home')">🏠 ホームへ</button>
             <button class="comp-btn comp-btn-secondary" id="comp-retry" onclick="retrySession()">🔄 もう一度</button>
@@ -769,536 +763,456 @@
     </div>
 </div>
 
+<!-- 外部データファイル読み込み -->
+<script src="data.js"></script>
+
 <script>
 // =============================================
-// 単語データ（100語版 - 1500語への拡張準備済み）
+// アプリケーション初期化とデータ管理
 // =============================================
-const WORDS = [
-    // 名詞 (25語)
-    { id:1, en:"environment", ja:"環境", phonetic:"/ɪnˈvaɪrənmənt/", pos:"noun", category:"noun", ex:"We must protect the environment for future generations." },
-    { id:2, en:"opportunity", ja:"機会", phonetic:"/ˌɑːpərˈtuːnəti/", pos:"noun", category:"noun", ex:"This internship is a great opportunity for your career." },
-    { id:3, en:"community", ja:"地域社会", phonetic:"/kəˈmjuːnəti/", pos:"noun", category:"noun", ex:"He is very active in his local community." },
-    { id:4, en:"education", ja:"教育", phonetic:"/ˌedʒuˈkeɪʃn/", pos:"noun", category:"noun", ex:"Quality education is essential for economic development." },
-    { id:5, en:"technology", ja:"技術", phonetic:"/tekˈnɑːlədʒi/", pos:"noun", category:"noun", ex:"Modern technology has changed our daily lives." },
-    { id:6, en:"development", ja:"発展、開発", phonetic:"/dɪˈveləpmənt/", pos:"noun", category:"noun", ex:"The development of renewable energy is crucial." },
-    { id:7, en:"individual", ja:"個人", phonetic:"/ˌɪndɪˈvɪdʒuəl/", pos:"noun", category:"noun", ex:"Each individual has unique talents and abilities." },
-    { id:8, en:"organization", ja:"組織、団体", phonetic:"/ˌɔːrɡənəˈzeɪʃn/", pos:"noun", category:"noun", ex:"She works for a nonprofit organization." },
-    { id:9, en:"responsibility", ja:"責任", phonetic:"/rɪˌspɑːnsəˈbɪləti/", pos:"noun", category:"noun", ex:"With great power comes great responsibility." },
-    { id:10, en:"achievement", ja:"達成、成果", phonetic:"/əˈtʃiːvmənt/", pos:"noun", category:"noun", ex:"Graduating from university was her greatest achievement." },
-    { id:11, en:"relationship", ja:"関係", phonetic:"/rɪˈleɪʃnʃɪp/", pos:"noun", category:"noun", ex:"They have maintained a strong relationship for years." },
-    { id:12, en:"population", ja:"人口", phonetic:"/ˌpɑːpjuˈleɪʃn/", pos:"noun", category:"noun", ex:"The city's population is growing rapidly." },
-    { id:13, en:"government", ja:"政府", phonetic:"/ˈɡʌvərnmənt/", pos:"noun", category:"noun", ex:"The government announced new environmental policies." },
-    { id:14, en:"tradition", ja:"伝統", phonetic:"/trəˈdɪʃn/", pos:"noun", category:"noun", ex:"Japan has many beautiful cultural traditions." },
-    { id:15, en:"pollution", ja:"汚染", phonetic:"/pəˈluːʃn/", pos:"noun", category:"noun", ex:"Air pollution is a serious problem in many cities." },
-    { id:16, en:"generation", ja:"世代", phonetic:"/ˌdʒenəˈreɪʃn/", pos:"noun", category:"noun", ex:"Each generation faces different challenges." },
-    { id:17, en:"experience", ja:"経験", phonetic:"/ɪkˈspɪriəns/", pos:"noun", category:"noun", ex:"She has extensive experience in international business." },
-    { id:18, en:"influence", ja:"影響", phonetic:"/ˈɪnfluəns/", pos:"noun", category:"noun", ex:"Social media has a strong influence on young people." },
-    { id:19, en:"performance", ja:"実行、性能", phonetic:"/pərˈfɔːrməns/", pos:"noun", category:"noun", ex:"The team's performance improved significantly this year." },
-    { id:20, en:"explanation", ja:"説明、解説", phonetic:"/ˌekspləˈneɪʃn/", pos:"noun", category:"noun", ex:"The teacher gave a clear explanation of the concept." },
-    { id:21, en:"investigation", ja:"調査、捜査", phonetic:"/ɪnˌvestɪˈɡeɪʃn/", pos:"noun", category:"noun", ex:"The police conducted a thorough investigation." },
-    { id:22, en:"information", ja:"情報", phonetic:"/ˌɪnfərˈmeɪʃn/", pos:"noun", category:"noun", ex:"We need more information before making a decision." },
-    { id:23, en:"situation", ja:"状況", phonetic:"/ˌsɪtʃuˈeɪʃn/", pos:"noun", category:"noun", ex:"The current economic situation is challenging." },
-    { id:24, en:"solution", ja:"解決策", phonetic:"/səˈluːʃn/", pos:"noun", category:"noun", ex:"We need to find a solution to this problem." },
-    { id:25, en:"competition", ja:"競争", phonetic:"/ˌkɑːmpəˈtɪʃn/", pos:"noun", category:"noun", ex:"The competition between companies drives innovation." },
 
-    // 動詞 (25語)
-    { id:26, en:"participate", ja:"参加する", phonetic:"/pɑːrˈtɪsɪpeɪt/", pos:"verb", category:"verb", ex:"All students should participate in school activities." },
-    { id:27, en:"communicate", ja:"伝達する", phonetic:"/kəˈmjuːnɪkeɪt/", pos:"verb", category:"verb", ex:"It's important to communicate clearly with your team." },
-    { id:28, en:"recognize", ja:"認識する", phonetic:"/ˈrekəɡnaɪz/", pos:"verb", category:"verb", ex:"I didn't recognize him with his new haircut." },
-    { id:29, en:"establish", ja:"設立する", phonetic:"/ɪˈstæblɪʃ/", pos:"verb", category:"verb", ex:"They established a new company last year." },
-    { id:30, en:"contribute", ja:"貢献する", phonetic:"/kənˈtrɪbjuːt/", pos:"verb", category:"verb", ex:"Everyone can contribute to making the world better." },
-    { id:31, en:"investigate", ja:"調査する", phonetic:"/ɪnˈvestɪɡeɪt/", pos:"verb", category:"verb", ex:"Scientists are investigating the effects of climate change." },
-    { id:32, en:"accomplish", ja:"成し遂げる", phonetic:"/əˈkɑːmplɪʃ/", pos:"verb", category:"verb", ex:"She accomplished all her goals for this year." },
-    { id:33, en:"encourage", ja:"励ます", phonetic:"/ɪnˈkɜːrɪdʒ/", pos:"verb", category:"verb", ex:"Teachers should encourage students to ask questions." },
-    { id:34, en:"maintain", ja:"維持する", phonetic:"/meɪnˈteɪn/", pos:"verb", category:"verb", ex:"It's important to maintain a healthy lifestyle." },
-    { id:35, en:"consider", ja:"考慮する", phonetic:"/kənˈsɪdər/", pos:"verb", category:"verb", ex:"Please consider all the options before deciding." },
-    { id:36, en:"provide", ja:"提供する", phonetic:"/prəˈvaɪd/", pos:"verb", category:"verb", ex:"The school provides free lunch for all students." },
-    { id:37, en:"require", ja:"必要とする", phonetic:"/rɪˈkwaɪər/", pos:"verb", category:"verb", ex:"This job requires strong communication skills." },
-    { id:38, en:"improve", ja:"改善する", phonetic:"/ɪmˈpruːv/", pos:"verb", category:"verb", ex:"We need to improve our customer service." },
-    { id:39, en:"achieve", ja:"達成する", phonetic:"/əˈtʃiːv/", pos:"verb", category:"verb", ex:"Hard work helps you achieve your dreams." },
-    { id:40, en:"develop", ja:"発達させる", phonetic:"/dɪˈveləp/", pos:"verb", category:"verb", ex:"Children develop language skills naturally." },
-    { id:41, en:"create", ja:"創造する", phonetic:"/kriˈeɪt/", pos:"verb", category:"verb", ex:"Artists create beautiful works of art." },
-    { id:42, en:"discover", ja:"発見する", phonetic:"/dɪˈskʌvər/", pos:"verb", category:"verb", ex:"Scientists discovered a new species of fish." },
-    { id:43, en:"determine", ja:"決定する", phonetic:"/dɪˈtɜːrmɪn/", pos:"verb", category:"verb", ex:"Your attitude determines your success." },
-    { id:44, en:"represent", ja:"代表する", phonetic:"/ˌreprɪˈzent/", pos:"verb", category:"verb", ex:"This flag represents our country." },
-    { id:45, en:"describe", ja:"描写する", phonetic:"/dɪˈskraɪb/", pos:"verb", category:"verb", ex:"Can you describe what you saw?" },
-    { id:46, en:"realize", ja:"気づく", phonetic:"/ˈriːəlaɪz/", pos:"verb", category:"verb", ex:"I realized I had forgotten my keys." },
-    { id:47, en:"organize", ja:"組織する", phonetic:"/ˈɔːrɡənaɪz/", pos:"verb", category:"verb", ex:"She organized a charity event for children." },
-    { id:48, en:"operate", ja:"操作する", phonetic:"/ˈɑːpəreɪt/", pos:"verb", category:"verb", ex:"Do you know how to operate this machine?" },
-    { id:49, en:"protect", ja:"保護する", phonetic:"/prəˈtekt/", pos:"verb", category:"verb", ex:"We must protect endangered animals." },
-    { id:50, en:"support", ja:"支援する", phonetic:"/səˈpɔːrt/", pos:"verb", category:"verb", ex:"Parents should support their children's dreams." },
-
-    // 形容詞 (25語)
-    { id:51, en:"significant", ja:"重要な", phonetic:"/sɪɡˈnɪfɪkənt/", pos:"adjective", category:"adjective", ex:"There has been significant progress in medicine." },
-    { id:52, en:"traditional", ja:"伝統的な", phonetic:"/trəˈdɪʃənl/", pos:"adjective", category:"adjective", ex:"They wore traditional Japanese clothing." },
-    { id:53, en:"efficient", ja:"効率的な", phonetic:"/ɪˈfɪʃnt/", pos:"adjective", category:"adjective", ex:"We need a more efficient transportation system." },
-    { id:54, en:"available", ja:"利用可能な", phonetic:"/əˈveɪləbl/", pos:"adjective", category:"adjective", ex:"Is this book available in the library?" },
-    { id:55, en:"responsible", ja:"責任感のある", phonetic:"/rɪˈspɑːnsəbl/", pos:"adjective", category:"adjective", ex:"Be responsible for your own actions." },
-    { id:56, en:"essential", ja:"不可欠な", phonetic:"/ɪˈsenʃl/", pos:"adjective", category:"adjective", ex:"Water is essential for all living things." },
-    { id:57, en:"successful", ja:"成功した", phonetic:"/səkˈsesfəl/", pos:"adjective", category:"adjective", ex:"She is a successful businesswoman." },
-    { id:58, en:"valuable", ja:"価値ある", phonetic:"/ˈvæljuəbl/", pos:"adjective", category:"adjective", ex:"Time is the most valuable resource we have." },
-    { id:59, en:"various", ja:"様々な", phonetic:"/ˈveriəs/", pos:"adjective", category:"adjective", ex:"There are various ways to learn English." },
-    { id:60, en:"global", ja:"世界的な", phonetic:"/ˈɡloʊbl/", pos:"adjective", category:"adjective", ex:"Climate change is a global issue." },
-    { id:61, en:"cultural", ja:"文化的な", phonetic:"/ˈkʌltʃərəl/", pos:"adjective", category:"adjective", ex:"Cultural exchange programs are very beneficial." },
-    { id:62, en:"environmental", ja:"環境の", phonetic:"/ɪnˌvaɪrənˈmentl/", pos:"adjective", category:"adjective", ex:"Environmental protection is everyone's responsibility." },
-    { id:63, en:"professional", ja:"専門的な", phonetic:"/prəˈfeʃənl/", pos:"adjective", category:"adjective", ex:"She received professional training in photography." },
-    { id:64, en:"independent", ja:"独立した", phonetic:"/ˌɪndɪˈpendənt/", pos:"adjective", category:"adjective", ex:"Young adults should learn to be independent." },
-    { id:65, en:"international", ja:"国際的な", phonetic:"/ˌɪntərˈnæʃənl/", pos:"adjective", category:"adjective", ex:"The university has many international students." },
-    { id:66, en:"popular", ja:"人気のある", phonetic:"/ˈpɑːpjələr/", pos:"adjective", category:"adjective", ex:"This restaurant is very popular among young people." },
-    { id:67, en:"natural", ja:"自然の", phonetic:"/ˈnætʃərəl/", pos:"adjective", category:"adjective", ex:"Natural disasters can cause serious damage." },
-    { id:68, en:"social", ja:"社会の", phonetic:"/ˈsoʊʃl/", pos:"adjective", category:"adjective", ex:"Social media has changed how we communicate." },
-    { id:69, en:"economic", ja:"経済の", phonetic:"/ˌiːkəˈnɑːmɪk/", pos:"adjective", category:"adjective", ex:"The country is facing economic challenges." },
-    { id:70, en:"personal", ja:"個人的な", phonetic:"/ˈpɜːrsənl/", pos:"adjective", category:"adjective", ex:"This is a personal matter between us." },
-    { id:71, en:"physical", ja:"身体の", phonetic:"/ˈfɪzɪkl/", pos:"adjective", category:"adjective", ex:"Regular exercise is good for physical health." },
-    { id:72, en:"mental", ja:"精神的な", phonetic:"/ˈmentl/", pos:"adjective", category:"adjective", ex:"Mental health is as important as physical health." },
-    { id:73, en:"financial", ja:"財政の", phonetic:"/faɪˈnænʃl/", pos:"adjective", category:"adjective", ex:"The company is facing financial difficulties." },
-    { id:74, en:"practical", ja:"実用的な", phonetic:"/ˈpræktɪkl/", pos:"adjective", category:"adjective", ex:"This is a practical solution to the problem." },
-    { id:75, en:"original", ja:"独創的な", phonetic:"/əˈrɪdʒənl/", pos:"adjective", category:"adjective", ex:"She has many original ideas for the project." },
-
-    // 副詞 (25語)
-    { id:76, en:"significantly", ja:"著しく", phonetic:"/sɪɡˈnɪfɪkəntli/", pos:"adverb", category:"adverb", ex:"The situation has significantly improved." },
-    { id:77, en:"gradually", ja:"徐々に", phonetic:"/ˈɡrædʒuəli/", pos:"adverb", category:"adverb", ex:"The weather is gradually getting warmer." },
-    { id:78, en:"effectively", ja:"効果的に", phonetic:"/ɪˈfektɪvli/", pos:"adverb", category:"adverb", ex:"We must use our resources effectively." },
-    { id:79, en:"approximately", ja:"おおよそ", phonetic:"/əˈprɑːksɪmətli/", pos:"adverb", category:"adverb", ex:"The journey takes approximately two hours." },
-    { id:80, en:"consequently", ja:"その結果", phonetic:"/ˈkɑːnsɪkwentli/", pos:"adverb", category:"adverb", ex:"He was late; consequently, he missed the train." },
-    { id:81, en:"particularly", ja:"特に", phonetic:"/pərˈtɪkjələrli/", pos:"adverb", category:"adverb", ex:"I particularly enjoy reading mystery novels." },
-    { id:82, en:"especially", ja:"特に", phonetic:"/ɪˈspeʃəli/", pos:"adverb", category:"adverb", ex:"I love all seasons, especially autumn." },
-    { id:83, en:"generally", ja:"一般的に", phonetic:"/ˈdʒenərəli/", pos:"adverb", category:"adverb", ex:"Generally speaking, people are kind to visitors." },
-    { id:84, en:"recently", ja:"最近", phonetic:"/ˈriːsntli/", pos:"adverb", category:"adverb", ex:"I recently started learning Spanish." },
-    { id:85, en:"currently", ja:"現在", phonetic:"/ˈkɜːrəntli/", pos:"adverb", category:"adverb", ex:"She is currently working on a new project." },
-    { id:86, en:"previously", ja:"以前に", phonetic:"/ˈpriːviəsli/", pos:"adverb", category:"adverb", ex:"He had previously worked in Japan for five years." },
-    { id:87, en:"immediately", ja:"すぐに", phonetic:"/ɪˈmiːdiətli/", pos:"adverb", category:"adverb", ex:"Please call me immediately when you arrive." },
-    { id:88, en:"frequently", ja:"頻繁に", phonetic:"/ˈfriːkwəntli/", pos:"adverb", category:"adverb", ex:"She frequently travels abroad for work." },
-    { id:89, en:"carefully", ja:"注意深く", phonetic:"/ˈkerfəli/", pos:"adverb", category:"adverb", ex:"Please read the instructions carefully." },
-    { id:90, en:"successfully", ja:"成功して", phonetic:"/səkˈsesfəli/", pos:"adverb", category:"adverb", ex:"The mission was completed successfully." },
-    { id:91, en:"properly", ja:"適切に", phonetic:"/ˈprɑːpərli/", pos:"adverb", category:"adverb", ex:"Make sure to install the software properly." },
-    { id:92, en:"clearly", ja:"明確に", phonetic:"/ˈklɪrli/", pos:"adverb", category:"adverb", ex:"Please speak clearly so everyone can understand." },
-    { id:93, en:"seriously", ja:"真剣に", phonetic:"/ˈsɪriəsli/", pos:"adverb", category:"adverb", ex:"We need to take this problem seriously." },
-    { id:94, en:"completely", ja:"完全に", phonetic:"/kəmˈpliːtli/", pos:"adverb", category:"adverb", ex:"I completely forgot about the meeting." },
-    { id:95, en:"absolutely", ja:"絶対に", phonetic:"/ˈæbsəluːtli/", pos:"adverb", category:"adverb", ex:"You are absolutely right about this issue." },
-    { id:96, en:"definitely", ja:"間違いなく", phonetic:"/ˈdefənətli/", pos:"adverb", category:"adverb", ex:"I will definitely attend the conference." },
-    { id:97, en:"probably", ja:"おそらく", phonetic:"/ˈprɑːbəbli/", pos:"adverb", category:"adverb", ex:"It will probably rain tomorrow." },
-    { id:98, en:"possibly", ja:"もしかすると", phonetic:"/ˈpɑːsəbli/", pos:"adverb", category:"adverb", ex:"We could possibly finish the project early." },
-    { id:99, en:"unfortunately", ja:"残念ながら", phonetic:"/ʌnˈfɔːrtʃənətli/", pos:"adverb", category:"adverb", ex:"Unfortunately, the event was cancelled due to rain." },
-    { id:100, en:"fortunately", ja:"幸運にも", phonetic:"/ˈfɔːrtʃənətli/", pos:"adverb", category:"adverb", ex:"Fortunately, no one was injured in the accident." }
-];
-
-// =============================================
-// データ管理・音声機能
-// =============================================
-let userData = JSON.parse(localStorage.getItem('eikenUserData')) || {
+let userData = JSON.parse(localStorage.getItem('eiken2UserData')) || {
     totalStudied: 0,
     totalKnown: 0,
     weakWords: [],
-    sessions: 0,
-    streak: 0,
-    lastStudyDate: null,
-    quizTotal: 0,
-    quizCorrect: 0,
+    sessions: 0
 };
 
-// Web Speech API初期化
+let appState = {
+    currentWords: [],
+    currentIndex: 0,
+    currentScore: 0,
+    isFlipped: false,
+    selectedCount: 10,
+    selectedRange: 'all',
+    selectedQuizCount: 10,
+    lastSession: {}
+};
+
+// Web Speech API
 const synth = window.speechSynthesis;
-let currentQuizWord = '';
 
-function saveData() {
-    localStorage.setItem('eikenUserData', JSON.stringify(userData));
+// =============================================
+// 初期化処理
+// =============================================
+
+window.addEventListener('load', initializeApp);
+
+function initializeApp() {
+    if (typeof WORDS !== 'undefined' && WORDS.length > 0) {
+        document.getElementById('loading-status').textContent = `${WORDS.length}語のデータを読み込み完了`;
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('main-nav').style.display = 'flex';
+                showScreen('home');
+                updateHomeStats();
+            }, 500);
+        }, 1000);
+    } else {
+        document.getElementById('loading-status').innerHTML = 
+            '<span style="color: #E74C3C;">エラー: data.js ファイルが見つかりません</span><br>data.js を正しく配置してください';
+    }
+}
+
+function saveUserData() {
+    localStorage.setItem('eiken2UserData', JSON.stringify(userData));
 }
 
 // =============================================
-// 音声再生機能
+// 画面遷移管理
 // =============================================
-function playAudio() {
-    if (synth.speaking) { synth.cancel(); }
-    const word = fcWords[fcIndex].en;
-    const utterThis = new SpeechSynthesisUtterance(word);
-    utterThis.lang = 'en-US';
-    utterThis.rate = 0.8;
-    utterThis.pitch = 1.0;
-    synth.speak(utterThis);
-}
 
-function playQuizAudio() {
-    if (synth.speaking) { synth.cancel(); }
-    const utterThis = new SpeechSynthesisUtterance(currentQuizWord);
-    utterThis.lang = 'en-US';
-    utterThis.rate = 0.8;
-    utterThis.pitch = 1.0;
-    synth.speak(utterThis);
-}
-
-// =============================================
-// ナビゲーション
-// =============================================
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    
     document.getElementById(`screen-${screenId}`).classList.add('active');
-
+    
     const navMap = {
         'home': 'nav-home',
         'flashcard-setup': 'nav-flash',
         'flashcard': 'nav-flash',
         'quiz-setup': 'nav-quiz',
         'quiz': 'nav-quiz',
-        'stats': 'nav-stats',
-        'completion': null,
+        'stats': 'nav-stats'
     };
-
+    
     if (navMap[screenId]) {
         document.getElementById(navMap[screenId]).classList.add('active');
     }
-
-    if (screenId === 'home') updateHome();
-    if (screenId === 'stats') updateStats();
+    
+    if (screenId === 'home') updateHomeStats();
+    if (screenId === 'stats') updateStatsScreen();
 }
 
 // =============================================
 // ホーム画面
 // =============================================
-function updateHome() {
+
+function updateHomeStats() {
+    document.getElementById('word-count-display').textContent = 
+        `総収録単語: ${WORDS ? WORDS.length : 0}語`;
+    
     document.getElementById('home-total').textContent = userData.totalStudied;
-    const acc = userData.totalStudied > 0 
-        ? Math.round((userData.totalKnown / userData.totalStudied) * 100) + '%'
-        : '0%';
-    document.getElementById('home-accuracy').textContent = acc;
     document.getElementById('home-known').textContent = userData.totalKnown;
-    document.getElementById('home-sessions').textContent = userData.sessions;
+    document.getElementById('home-weak').textContent = userData.weakWords.length;
+    
+    const accuracy = userData.totalStudied > 0 
+        ? Math.round((userData.totalKnown / userData.totalStudied) * 100) 
+        : 0;
+    document.getElementById('home-accuracy').textContent = accuracy + '%';
+}
 
-    // ストリーク表示
-    const streakArea = document.getElementById('streak-area');
-    if (userData.streak > 0) {
-        streakArea.innerHTML = `
-            <div class="streak-banner">
-                <div class="streak-fire">🔥</div>
-                <div class="streak-info">
-                    <div class="streak-num">${userData.streak}日連続学習中！</div>
-                    <div class="streak-label">この調子で続けよう！</div>
-                </div>
-            </div>
-        `;
+// =============================================
+// 設定選択
+// =============================================
+
+function selectCount(count) {
+    appState.selectedCount = count;
+    document.querySelectorAll('[id^="count-"]').forEach(b => b.classList.remove('selected'));
+    document.getElementById(`count-${count}`).classList.add('selected');
+}
+
+function selectRange(range) {
+    appState.selectedRange = range;
+    document.querySelectorAll('[id^="range-"]').forEach(b => b.classList.remove('selected'));
+    document.getElementById(`range-${range}`).classList.add('selected');
+}
+
+function selectQuizCount(count) {
+    appState.selectedQuizCount = count;
+    document.querySelectorAll('[id^="qcount-"]').forEach(b => b.classList.remove('selected'));
+    document.getElementById(`qcount-${count}`).classList.add('selected');
+}
+
+// =============================================
+// ユーティリティ関数
+// =============================================
+
+function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+    return arr;
 }
 
-// =============================================
-// カテゴリ・問題数選択
-// =============================================
-let selectedFlashCategory = 'all';
-let selectedQuizCategory = 'all';
-let selectedFlashCount = 10;
-let selectedQuizCount = 10;
-
-function selectCategory(btn, mode, category) {
-    const gridId = mode === 'flash' ? 'category-grid-flash' : 'category-grid-quiz';
-    document.querySelectorAll(`#${gridId} .category-btn`).forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    if (mode === 'flash') selectedFlashCategory = category;
-    else selectedQuizCategory = category;
-}
-
-function selectCount(n) {
-    document.querySelectorAll('[id^="count-btn"]').forEach(b => b.classList.remove('selected'));
-    const key = n === 0 ? 'all' : n;
-    document.getElementById(`count-btn-${key}`).classList.add('selected');
-    selectedFlashCount = n;
-}
-
-function selectQuizCount(n) {
-    document.querySelectorAll('[id^="qcount-btn"]').forEach(b => b.classList.remove('selected'));
-    document.getElementById(`qcount-btn-${n}`).classList.add('selected');
-    selectedQuizCount = n;
-}
-
-function getFilteredWords(category) {
-    if (category === 'all') return [...WORDS];
-    if (category === 'weak') {
+function getFilteredWords(range) {
+    if (!WORDS) return [];
+    if (range === 'all') return WORDS;
+    if (range === 'weak') {
         return WORDS.filter(w => userData.weakWords.includes(w.id));
     }
-    return WORDS.filter(w => w.category === category);
-}
-
-function shuffle(arr) {
-    return arr.sort(() => Math.random() - 0.5);
+    return WORDS.filter(w => w.pos === range);
 }
 
 // =============================================
-// フラッシュカード
+// 音声機能
 // =============================================
-let fcWords = [];
-let fcIndex = 0;
-let fcKnown = 0;
-let fcFlipped = false;
-let fcMode = 'flashcard';
+
+function playAudio() {
+    if (!appState.currentWords[appState.currentIndex]) return;
+    if (synth.speaking) synth.cancel();
+    
+    const word = appState.currentWords[appState.currentIndex].en;
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.8;
+    utterance.pitch = 1.0;
+    synth.speak(utterance);
+}
+
+function playQuizAudio() {
+    playAudio(); // 同じ機能を使用
+}
+
+// =============================================
+// フラッシュカード機能
+// =============================================
 
 function startFlashcard() {
-    let words = getFilteredWords(selectedFlashCategory);
+    let words = getFilteredWords(appState.selectedRange);
     if (words.length === 0) {
-        alert('この条件に該当する単語がありません。');
+        alert('該当する単語がありません。');
         return;
     }
+    
     words = shuffle(words);
-    if (selectedFlashCount > 0 && selectedFlashCount < words.length) {
-        words = words.slice(0, selectedFlashCount);
+    if (appState.selectedCount < words.length) {
+        words = words.slice(0, appState.selectedCount);
     }
-    fcWords = words;
-    fcIndex = 0;
-    fcKnown = 0;
-    fcMode = 'flashcard';
+    
+    appState.currentWords = words;
+    appState.currentIndex = 0;
+    appState.currentScore = 0;
+    
     showScreen('flashcard');
-    renderFC();
+    renderFlashcard();
 }
 
 function startWeakWords() {
     if (userData.weakWords.length === 0) {
-        alert('苦手単語がまだありません。\n単語カードで「知らなかった」を押すと苦手リストに追加されます。');
+        alert('苦手単語がまだありません。\n学習を進めて苦手な単語を蓄積しましょう。');
         return;
     }
-    selectedFlashCategory = 'weak';
-    selectedFlashCount = 0;
+    
+    appState.selectedRange = 'weak';
     startFlashcard();
 }
 
 function startRandom() {
-    selectedFlashCategory = 'all';
-    selectedFlashCount = 20;
+    appState.selectedRange = 'all';
+    appState.selectedCount = 20;
     startFlashcard();
 }
 
-function renderFC() {
-    const word = fcWords[fcIndex];
+function renderFlashcard() {
+    if (appState.currentIndex >= appState.currentWords.length) {
+        completeSession('flashcard');
+        return;
+    }
+    
+    const word = appState.currentWords[appState.currentIndex];
+    
     document.getElementById('fc-word').textContent = word.en;
-    document.getElementById('fc-phonetic').textContent = word.phonetic;
+    document.getElementById('fc-phonetic').textContent = word.phonetic || '';
     document.getElementById('fc-ja').textContent = word.ja;
-    document.getElementById('fc-example').textContent = word.ex;
-    document.getElementById('fc-current').textContent = fcIndex + 1;
-    document.getElementById('fc-total').textContent = fcWords.length;
-
-    const pct = (fcIndex / fcWords.length) * 100;
-    document.getElementById('fc-progress').style.width = `${pct}%`;
-
+    document.getElementById('fc-example').textContent = word.ex || '';
+    
+    document.getElementById('fc-current').textContent = appState.currentIndex + 1;
+    document.getElementById('fc-total').textContent = appState.currentWords.length;
+    
+    const progress = (appState.currentIndex / appState.currentWords.length) * 100;
+    document.getElementById('fc-progress').style.width = progress + '%';
+    
+    // カードをリセット
     document.getElementById('flashcard').classList.remove('flipped');
     document.getElementById('answer-btns').classList.remove('show');
-    fcFlipped = false;
+    appState.isFlipped = false;
 }
 
 function flipFlashcard() {
-    if (fcFlipped) return;
+    if (appState.isFlipped) return;
+    
     document.getElementById('flashcard').classList.add('flipped');
     document.getElementById('answer-btns').classList.add('show');
-    fcFlipped = true;
+    appState.isFlipped = true;
 }
 
 function fcAnswer(isKnown) {
-    const word = fcWords[fcIndex];
+    const word = appState.currentWords[appState.currentIndex];
+    
     userData.totalStudied++;
+    
     if (isKnown) {
         userData.totalKnown++;
-        fcKnown++;
+        appState.currentScore++;
+        // 苦手リストから除去
         userData.weakWords = userData.weakWords.filter(id => id !== word.id);
     } else {
+        // 苦手リストに追加
         if (!userData.weakWords.includes(word.id)) {
             userData.weakWords.push(word.id);
         }
     }
-    saveData();
-    updateStreak();
-
-    fcIndex++;
-    if (fcIndex < fcWords.length) {
-        setTimeout(renderFC, 300);
-    } else {
-        showCompletion(fcKnown, fcWords.length, 'flashcard');
-    }
+    
+    saveUserData();
+    appState.currentIndex++;
+    
+    setTimeout(renderFlashcard, 300);
 }
 
 // =============================================
-// クイズ
+// クイズ機能
 // =============================================
-let qzWords = [];
-let qzIndex = 0;
-let qzScore = 0;
-let qzAnswered = false;
 
 function startQuiz() {
-    let words = getFilteredWords(selectedQuizCategory);
+    let words = getFilteredWords('all');
     if (words.length < 4) {
         alert('クイズには最低4単語が必要です。');
         return;
     }
+    
     words = shuffle(words);
-    if (selectedQuizCount < words.length) {
-        words = words.slice(0, selectedQuizCount);
+    if (appState.selectedQuizCount < words.length) {
+        words = words.slice(0, appState.selectedQuizCount);
     }
-    qzWords = words;
-    qzIndex = 0;
-    qzScore = 0;
+    
+    appState.currentWords = words;
+    appState.currentIndex = 0;
+    appState.currentScore = 0;
+    
     showScreen('quiz');
     renderQuiz();
 }
 
 function renderQuiz() {
-    const word = qzWords[qzIndex];
-    currentQuizWord = word.en;
-    qzAnswered = false;
-
+    if (appState.currentIndex >= appState.currentWords.length) {
+        completeSession('quiz');
+        return;
+    }
+    
+    const word = appState.currentWords[appState.currentIndex];
+    
     document.getElementById('qz-word').textContent = word.en;
-    document.getElementById('qz-phonetic').textContent = word.phonetic;
-    document.getElementById('qz-current').textContent = qzIndex + 1;
-    document.getElementById('qz-total').textContent = qzWords.length;
-    document.getElementById('qz-score').textContent = qzScore;
-
-    const pct = (qzIndex / qzWords.length) * 100;
-    document.getElementById('qz-progress').style.width = `${pct}%`;
-
-    // 選択肢生成
-    const wrongPool = shuffle(WORDS.filter(w => w.id !== word.id)).slice(0, 3);
-    const options = shuffle([word, ...wrongPool]);
-
-    const result = document.getElementById('qz-result');
-    result.className = 'quiz-result';
-    result.textContent = '';
-    document.getElementById('next-quiz-btn').style.display = 'none';
-
-    const optContainer = document.getElementById('qz-options');
-    optContainer.innerHTML = '';
-    options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'quiz-option';
-        btn.textContent = opt.ja;
-        btn.onclick = () => answerQuiz(btn, opt.id === word.id, word);
-        optContainer.appendChild(btn);
+    document.getElementById('qz-phonetic').textContent = word.phonetic || '';
+    document.getElementById('qz-current').textContent = appState.currentIndex + 1;
+    document.getElementById('qz-total').textContent = appState.currentWords.length;
+    document.getElementById('qz-score').textContent = appState.currentScore;
+    
+    const progress = (appState.currentIndex / appState.currentWords.length) * 100;
+    document.getElementById('qz-progress').style.width = progress + '%';
+    
+    // 選択肢を生成
+    const wrongOptions = shuffle(WORDS.filter(w => w.id !== word.id)).slice(0, 3);
+    const allOptions = shuffle([word, ...wrongOptions]);
+    
+    const optionsContainer = document.getElementById('qz-options');
+    optionsContainer.innerHTML = '';
+    
+    allOptions.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'quiz-option';
+        button.textContent = option.ja;
+        button.onclick = () => handleQuizAnswer(button, option.id === word.id, word);
+        optionsContainer.appendChild(button);
     });
+    
+    // UI リセット
+    document.getElementById('qz-result').className = 'quiz-result';
+    document.getElementById('qz-result').textContent = '';
+    document.getElementById('next-quiz-btn').style.display = 'none';
 }
 
-function answerQuiz(btn, isCorrect, word) {
-    if (qzAnswered) return;
-    qzAnswered = true;
-
-    userData.quizTotal++;
+function handleQuizAnswer(button, isCorrect, word) {
+    // 全ボタンを無効化
+    document.querySelectorAll('.quiz-option').forEach(b => {
+        b.onclick = null;
+    });
+    
+    userData.totalStudied++;
     const result = document.getElementById('qz-result');
-
+    
     if (isCorrect) {
-        btn.classList.add('correct');
-        qzScore++;
-        userData.quizCorrect++;
+        button.classList.add('correct');
+        userData.totalKnown++;
+        appState.currentScore++;
         result.textContent = '✅ 正解！';
         result.className = 'quiz-result correct-msg show';
+        // 苦手リストから除去
+        userData.weakWords = userData.weakWords.filter(id => id !== word.id);
     } else {
-        btn.classList.add('wrong');
-        result.textContent = `❌ 不正解。正解は「${word.ja}」`;
+        button.classList.add('wrong');
+        result.textContent = `❌ 不正解。正解は「${word.ja}」です。`;
         result.className = 'quiz-result wrong-msg show';
+        
+        // 正解を表示
+        document.querySelectorAll('.quiz-option').forEach(b => {
+            if (b.textContent === word.ja) {
+                b.classList.add('correct');
+            }
+        });
+        
+        // 苦手リストに追加
         if (!userData.weakWords.includes(word.id)) {
             userData.weakWords.push(word.id);
         }
     }
-
-    document.querySelectorAll('.quiz-option').forEach(b => b.onclick = null);
+    
+    saveUserData();
     document.getElementById('next-quiz-btn').style.display = 'block';
-    saveData();
-    updateStreak();
 }
 
 function nextQuiz() {
-    qzIndex++;
-    if (qzIndex < qzWords.length) {
-        renderQuiz();
-    } else {
-        userData.sessions++;
-        saveData();
-        showCompletion(qzScore, qzWords.length, 'quiz');
-    }
+    appState.currentIndex++;
+    renderQuiz();
 }
 
 // =============================================
-// 完了画面
+// セッション完了処理
 // =============================================
-let lastSession = {};
 
-function showCompletion(correct, total, mode) {
-    if (mode === 'flashcard') {
-        userData.sessions++;
-        saveData();
-    }
-    lastSession = { correct, total, mode };
-
-    const pct = Math.round((correct / total) * 100);
+function completeSession(mode) {
+    userData.sessions++;
+    saveUserData();
+    
+    const totalQuestions = appState.currentWords.length;
+    const correctAnswers = appState.currentScore;
+    const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+    
+    // 完了画面の設定
     let emoji = '😊';
-    let msg = 'よく頑張りました！';
-
-    if (pct >= 90) { emoji = '🏆'; msg = '完璧です！英検2級合格間違いなし！'; }
-    else if (pct >= 70) { emoji = '🎉'; msg = '素晴らしい！この調子で続けましょう！'; }
-    else if (pct >= 50) { emoji = '📚'; msg = 'もう少し！復習して再チャレンジ！'; }
-    else { emoji = '💪'; msg = '諦めずに続けましょう！必ず上達します！'; }
-
+    let message = 'お疲れ様でした！';
+    
+    if (percentage >= 90) {
+        emoji = '🏆';
+        message = '完璧です！英検2級合格レベル！';
+    } else if (percentage >= 70) {
+        emoji = '🎉';
+        message = '素晴らしい！この調子で続けましょう！';
+    } else if (percentage >= 50) {
+        emoji = '📚';
+        message = 'もう少し！復習して再チャレンジ！';
+    } else {
+        emoji = '💪';
+        message = 'ここから伸びます。継続が大切です！';
+    }
+    
     document.getElementById('comp-emoji').textContent = emoji;
-    document.getElementById('comp-title').textContent = mode === 'quiz' ? 'クイズ完了！' : '学習完了！';
-    document.getElementById('comp-score').textContent = `${pct}%`;
-    document.getElementById('comp-msg').textContent = `${correct} / ${total} 問正解 - ${msg}`;
-
+    document.getElementById('comp-title').textContent = 
+        mode === 'quiz' ? 'クイズ完了！' : '学習完了！';
+    document.getElementById('comp-score').textContent = percentage + '%';
+    document.getElementById('comp-msg').textContent = 
+        `${correctAnswers} / ${totalQuestions} 問正解 - ${message}`;
+    
+    appState.lastSession = { mode, correctAnswers, totalQuestions };
     showScreen('completion');
 }
 
 function retrySession() {
-    if (lastSession.mode === 'quiz') startQuiz();
-    else startFlashcard();
+    if (appState.lastSession.mode === 'quiz') {
+        startQuiz();
+    } else {
+        startFlashcard();
+    }
 }
 
 // =============================================
-// 統計
+// 統計画面
 // =============================================
-function updateStats() {
-    const acc = userData.totalStudied > 0
-        ? Math.round((userData.totalKnown / userData.totalStudied) * 100) + '%'
-        : '0%';
-    const quizAcc = userData.quizTotal > 0
-        ? Math.round((userData.quizCorrect / userData.quizTotal) * 100) + '%'
-        : '0%';
 
-    document.getElementById('stats-accuracy').textContent = acc;
+function updateStatsScreen() {
     document.getElementById('stats-total').textContent = userData.totalStudied;
     document.getElementById('stats-known').textContent = userData.totalKnown;
     document.getElementById('stats-weak').textContent = userData.weakWords.length;
-    document.getElementById('stats-sessions').textContent = userData.sessions;
-    document.getElementById('stats-streak').textContent = userData.streak;
-    document.getElementById('stats-quiz-acc').textContent = quizAcc;
+    
+    const accuracy = userData.totalStudied > 0 
+        ? Math.round((userData.totalKnown / userData.totalStudied) * 100) 
+        : 0;
+    document.getElementById('stats-accuracy').textContent = accuracy + '%';
 }
 
 function resetStats() {
     if (confirm('学習データを全てリセットしますか？\nこの操作は取り消せません。')) {
         userData = {
-            totalStudied: 0, totalKnown: 0, weakWords: [],
-            sessions: 0, streak: 0, lastStudyDate: null,
-            quizTotal: 0, quizCorrect: 0,
+            totalStudied: 0,
+            totalKnown: 0,
+            weakWords: [],
+            sessions: 0
         };
-        saveData();
-        updateStats();
-        alert('リセットしました。');
+        saveUserData();
+        updateHomeStats();
+        updateStatsScreen();
+        alert('学習データをリセットしました。');
     }
 }
 
-// =============================================
-// ストリーク管理
-// =============================================
-function updateStreak() {
-    const today = new Date().toDateString();
-    if (userData.lastStudyDate !== today) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        if (userData.lastStudyDate === yesterday.toDateString()) {
-            userData.streak++;
-        } else {
-            userData.streak = 1;
-        }
-        userData.lastStudyDate = today;
-        saveData();
-    }
-}
-
-// =============================================
-// 初期化
-// =============================================
-updateHome();
 </script>
+
 </body>
 </html>
+
 
