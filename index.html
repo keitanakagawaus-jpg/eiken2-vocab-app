@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>英検2級 単語マスター</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --text-sub: #7F8C8D;
+            --btn-know: #2ECC71;
+            --btn-unknown: #E74C3C;
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", sans-serif; 
+        }
+        
+        body {
+            background: var(--bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: white;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .card-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            margin: 20px 0;
+        }
+
+        .flashcard {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .flashcard:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #f8f9fa;
+        }
+
+        .word-en { 
+            font-size: 36px; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            color: var(--primary);
+        }
+
+        .phonetic { 
+            font-size: 18px; 
+            color: var(--text-sub); 
+            margin-bottom: 20px; 
+            font-style: italic;
+        }
+
+        .word-ja { 
+            font-size: 32px; 
+            font-weight: bold; 
+            color: var(--primary); 
+            margin-bottom: 20px;
+        }
+
+        .example { 
+            font-size: 16px; 
+            color: var(--text-sub); 
+            text-align: center; 
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .instruction {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .controls.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+            min-width: 140px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .btn-unknown { background: var(--btn-unknown); }
+        .btn-know { background: var(--btn-know); }
+        .btn-restart { background: var(--primary); margin-top: 20px; }
+
+        .completion-screen {
+            text-align: center;
+            color: var(--text-main);
+        }
+
+        .completion-screen h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .final-stats {
+            font-size: 24px;
+            margin: 20px 0;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎯 英検2級 単語マスター</h1>
+        <div class="stats-row">
+            <span id="counter">1 / 15</span>
+            <span id="score">正解率: 0%</span>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+    </div>
+
+    <div class="instruction" id="instruction">カードをタップして意味を確認してください</div>
+
+    <div class="card-container">
+        <div class="flashcard" id="card" onclick="flipCard()">
+            <div class="card-front">
+                <div class="word-en" id="en-text">Environment</div>
+                <div class="phonetic" id="phonetic-text">/ɪnˈvaɪrənmənt/</div>
+            </div>
+            <div class="card-back">
+                <div class="word-ja" id="ja-text">環境</div>
+                <div class="example" id="ex-text">We must protect the environment for future generations.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls" id="controls">
+        <button class="btn-unknown" onclick="answer(false)">❌ 知らなかった</button>
+        <button class="btn-know" onclick="answer(true)">✅ 知っていた</button>
+    </div>
+
+    <script>
+        // 英検2級レベル頻出単語（15語のサンプル）
+        const wordData = [
+            { en: "environment", ja: "環境", phonetic: "/ɪnˈvaɪrənmənt/", ex: "We must protect the environment for future generations." },
+            { en: "participate", ja: "参加する", phonetic: "/pɑːrˈtɪsɪpeɪt/", ex: "All students should participate in school activities." },
+            { en: "opportunity", ja: "機会", phonetic: "/ˌɑːpərˈtuːnəti/", ex: "This internship is a great opportunity for your career." },
+            { en: "experience", ja: "経験", phonetic: "/ɪkˈspɪriəns/", ex: "She has extensive experience in international business." },
+            { en: "communicate", ja: "意思疎通する", phonetic: "/kəˈmjuːnɪkeɪt/", ex: "It's important to communicate clearly with your team." },
+            { en: "technology", ja: "技術", phonetic: "/tekˈnɑːlədʒi/", ex: "Modern technology has changed our daily lives." },
+            { en: "community", ja: "地域社会", phonetic: "/kəˈmjuːnəti/", ex: "He is very active in his local community." },
+            { en: "education", ja: "教育", phonetic: "/ˌedʒuˈkeɪʃn/", ex: "Quality education is essential for economic development." },
+            { en: "influence", ja: "影響", phonetic: "/ˈɪnfluəns/", ex: "Social media has a strong influence on young people." },
+            { en: "recognize", ja: "認識する", phonetic: "/ˈrekəɡnaɪz/", ex: "I didn't recognize him with his new haircut." },
+            { en: "significant", ja: "重要な", phonetic: "/sɪɡˈnɪfɪkənt/", ex: "There has been a significant improvement in air quality." },
+            { en: "development", ja: "発展", phonetic: "/dɪˈveləpmənt/", ex: "The development of renewable energy is crucial." },
+            { en: "individual", ja: "個人", phonetic: "/ˌɪndɪˈvɪdʒuəl/", ex: "Each individual has unique talents and abilities." },
+            { en: "responsibility", ja: "責任", phonetic: "/rɪˌspɑːnsəˈbɪləti/", ex: "With great power comes great responsibility." },
+            { en: "achievement", ja: "達成", phonetic: "/əˈtʃiːvmənt/", ex: "Graduating from university was her greatest achievement." }
+        ];
+
+        let currentIndex = 0;
+        let knownCount = 0;
+        let isFlipped = false;
+
+        const card = document.getElementById('card');
+        const controls = document.getElementById('controls');
+        const instruction = document.getElementById('instruction');
+        
+        function updateCard() {
+            const word = wordData[currentIndex];
+            document.getElementById('en-text').textContent = word.en;
+            document.getElementById('phonetic-text').textContent = word.phonetic;
+            document.getElementById('ja-text').textContent = word.ja;
+            document.getElementById('ex-text').textContent = word.ex;
+            
+            // 進捗更新
+            const progressPercent = (currentIndex / wordData.length) * 100;
+            document.getElementById('progress').style.width = `${progressPercent}%`;
+            document.getElementById('counter').textContent = `${currentIndex + 1} / ${wordData.length}`;
+            
+            // カードリセット
+            card.classList.remove('flipped');
+            controls.classList.remove('show');
+            instruction.style.display = 'block';
+            isFlipped = false;
+        }
+
+        function flipCard() {
+            if (isFlipped) return;
+            
+            card.classList.add('flipped');
+            controls.classList.add('show');
+            instruction.style.display = 'none';
+            isFlipped = true;
+        }
+
+        function answer(isKnown) {
+            if (isKnown) knownCount++;
+            
+            currentIndex++;
+            
+            if (currentIndex < wordData.length) {
+                setTimeout(() => {
+                    updateCard();
+                    updateScore();
+                }, 500);
+            } else {
+                showCompletion();
+            }
+        }
+
+        function updateScore() {
+            const currentScore = currentIndex > 0 ? Math.round((knownCount / currentIndex) * 100) : 0;
+            document.getElementById('score').textContent = `正解率: ${currentScore}%`;
+        }
+
+        function showCompletion() {
+            const finalScore = Math.round((knownCount / wordData.length) * 100);
+            document.getElementById('progress').style.width = '100%';
+            
+            let encouragement = '';
+            if (finalScore >= 80) encouragement = '素晴らしい！英検2級レベルです！🎉';
+            else if (finalScore >= 60) encouragement = 'よく頑張りました！もう少しです！👍';
+            else encouragement = '復習して再チャレンジしましょう！📚';
+            
+            card.innerHTML = `
+                <div class="completion-screen">
+                    <h2>学習完了！</h2>
+                    <div class="final-stats">
+                        正解: ${knownCount} / ${wordData.length}<br>
+                        正解率: ${finalScore}%
+                    </div>
+                    <p>${encouragement}</p>
+                    <button class="btn-restart" onclick="restart()">もう一度チャレンジ</button>
+                </div>
+            `;
+            
+            controls.style.display = 'none';
+            instruction.style.display = 'none';
+        }
+
+        function restart() {
+            currentIndex = 0;
+            knownCount = 0;
+            isFlipped = false;
+            controls.style.display = 'flex';
+            updateCard();
+            updateScore();
+        }
+
+        // 初期化
+        updateCard();
+        updateScore();
+    </script>
+</body>
+</html>
